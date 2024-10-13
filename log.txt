@@ -1,0 +1,7 @@
+Sun, 13 Oct 2024 23:36:27 GMT - INFO - Hello 2
+Sun, 13 Oct 2024 23:36:33 GMT - INFO - Hello 2
+Sun, 13 Oct 2024 23:36:44 GMT - ERROR - Hello 2
+Sun, 13 Oct 2024 23:37:34 GMT - ERROR - Hello from UDP
+Sun, 13 Oct 2024 23:37:34 GMT - ERROR - Hello from TCP
+Sun, 13 Oct 2024 23:39:45 GMT - ERROR - Hello from UDP $$$
+Sun, 13 Oct 2024 23:39:45 GMT - ERROR - Hello from TCP

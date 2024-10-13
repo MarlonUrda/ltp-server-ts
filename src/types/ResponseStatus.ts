@@ -25,3 +25,5 @@ const responseString = (status: ResponseStatus): string => {
       return 'Unknown error';
   }
 }
+
+export { ResponseStatus, responseString };

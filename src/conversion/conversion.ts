@@ -1,82 +1,76 @@
-import * as b64 from "base-64"
-import { Request, Response } from "../types/types"
+import { LTPRequest, LTPResponse } from "../types/types"
 import { contains } from "../helpers/contains"
-import { AllLogLevels, LogLevel } from "../constants/LogLevel"
-import { ErrInvalidResponseStatus } from "../types/Errors"
+import { LogLevel } from "../constants/LogLevel"
+import { ResponseStatus } from "../types/ResponseStatus"
 
-const requestToBytes = (req: Request): Uint8Array => {
-  const b64EncodedMessage = b64.encode(req.Message)
-  const result = `LTP$1.0$${b64EncodedMessage}$${req.Level}$${req.Save}$LTP`
-  return new TextEncoder().encode(result)
+const requestToBytes = (req: LTPRequest): Buffer => {
+  const b64EncodedMessage = Buffer.from(req.message).toString("base64")
+  const result = `LTP$1.0$${b64EncodedMessage}$${req.level}$${req.save}$LTP`
+  return Buffer.from(result)
 }
 
-const bytesToRequest = (b: Uint8Array): { req: Request | null, status: ResponseStatus } => {
+const bytesToRequest = (b: Uint8Array): [LTPRequest | null, ResponseStatus] => {
   const decoded = new TextDecoder().decode(b).split("$")
 
   if (decoded.length !== 6 || decoded[0] !== "LTP" || decoded[5] !== "LTP"){
-    return { req: null, status: ResponseStatus.ParseError }
+    throw [null, ResponseStatus.ParseError]
   }
 
-  const message = b64.decode(decoded[2])
+  const message = Buffer.from(decoded[2], "base64").toString()
+
+
+  if (!contains(Object.values(LogLevel), decoded[3])){
+    return [null, ResponseStatus.InvalidLevelError]
+  }
 
   const level = decoded[3] as LogLevel
 
-  if (!contains(AllLogLevels, level)) {
-    return { req: null, status: ResponseStatus.InvalidLevelError }
-  }
-
   if (decoded[4] !== "true" && decoded[4] !== "false"){
-    return { req: null, status: ResponseStatus.InvalidSaveError }
+    return [null, ResponseStatus.InvalidSaveError]
   }
   const save = decoded[4] === "true"
 
-  return {
-    req: {
-      Message: message,
-      Level: level,
-      Save: save
-    },
-    status: ResponseStatus.Success
-  }
+  return [{
+    message: message,
+    level: level,
+    save: save
+  }, ResponseStatus.Success]
 }
 
-const ResponseToBytes = (res: Response): Uint8Array => {
-  const b64EncodedMessage = b64.encode(res.Message)
-  const result = `LTP$1.0$${b64EncodedMessage}$${res.Status.toString()}$LTP`
-  return new TextEncoder().encode(result)
+const responseToBytes = (res: LTPResponse): Buffer => {
+  const b64EncodedMessage = Buffer.from(res.message).toString("base64")
+  const result = `LTP$1.0$${b64EncodedMessage}$${res.status.toString()}$LTP`
+  return Buffer.from(result)
 }
 
-const bytesToResponse = (b: Uint8Array): { res: Response | null, error: Error | null } => {
+const bytesToResponse = (b: Uint8Array): LTPResponse => {
   const invalidResponse = new Error("Invalid response")
   const decoded = new TextDecoder().decode(b).split("$")
 
   if (decoded.length !== 5){
-    return { res: null, error: invalidResponse }
+    throw new Error("Invalid response")
   }
 
   if (decoded[0] !== "LTP" || decoded[1] !== "1.0" ||decoded[4] !== "LTP"){
-    return { res: null, error: invalidResponse }
+    throw new Error("Invalid response")
   }
 
   const status = parseInt(decoded[3], 10)
 
   if(isNaN(status)) {
-    return { res: null, error: invalidResponse }
+    throw new Error("Invalid response")
   }
 
   if (status < 0 || status > 5) {
-    return { res: null, error: invalidResponse }
+    throw new Error("Invalid response")
   }
 
-  const message = b64.decode(decoded[2])
+  const message = Buffer.from(decoded[2], "base64").toString()
 
   return {
-    res: {
-      Message: message,
-      Status: status
-    },
-    error: null
+      message: message,
+      status: status
+    }
   }
-}
 
-export { requestToBytes, bytesToRequest }
+export { requestToBytes, bytesToRequest, responseToBytes, bytesToResponse }

@@ -5,14 +5,18 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "type": "module",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "base-64": "^1.0.0"
+    "base-64": "^1.0.0",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
-    "@types/base-64": "^1.0.2"
+    "@types/base-64": "^1.0.2",
+    "@types/node": "^22.7.5",
+    "tsx": "^4.19.1"
   }
 }
